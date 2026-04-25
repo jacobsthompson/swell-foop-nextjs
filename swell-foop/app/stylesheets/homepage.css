@@ -1,0 +1,15 @@
+.home-page {
+    height: 100vh;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    text-align: justify;
+    color: white;
+
+    background-color: black;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-top: 2rem;
+}
