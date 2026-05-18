@@ -4,7 +4,7 @@ import Image from "next/image";
 import "../stylesheets/music.css";
 
 
-import {linkIcons} from "./ImageLinks";
+import {linkIcons} from "./loadingImages";
 
 const releases = [
     'https://open.spotify.com/album/3wIMXwNS34iV4qAE1kzQ8k', // Dead Weight
@@ -118,10 +118,25 @@ function useYoutube(){
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        fetch("/api/youtubevideos")
+        fetch("api/youtube")
             .then(r => r.text())
+            .then(text => {
+                console.log("Raw response:", text); // 👈 check this in devtools
+                const videoIds = JSON.parse(text);
+                const embedUrls = videoIds.map(id => `https://www.youtube.com/embed/${id}`);
+                setVideos(embedUrls);
+                setLoading(false);
+            })
+            .catch(err => {
+                setError(err.message);
+                setLoading(false);
+            });
+    }, []);
+
+    useEffect(() => {
+        fetch("/api/youtube")
+            .then(r => r.json())
             .then(videoIds => {
-                console.log(videoIds);
                 const embedUrls = videoIds.map(id => `https://www.youtube.com/embed/${id}`);
                 setVideos(embedUrls);
                 setLoading(false);
@@ -135,7 +150,7 @@ function useYoutube(){
     return { videos, loading, error };
 }
 
-function YoutubeCarousel(){
+export function MusicVideos(){
     const {videos, loading, error} = useYoutube();
 
     if(loading) return <p> Loading Shows </p>
@@ -143,16 +158,19 @@ function YoutubeCarousel(){
 
     return (
         <div className="youtube-container">
-            {videos.map((url, i) => (
-                <iframe
-                    key={i}
-                    src={url}
-                    width="560"
-                    height="315"
-                    allowFullScreen
-                    title={`Video ${i + 1}`}
-                />
-            ))}
+            <div className="youtube-video-container" style={{gridTemplateColumns: `repeat(${videos.length},1fr)`}}>
+                {videos.map((url, i) => (
+                    <div key={i} className="youtube-video-wrapper">
+                        <iframe
+                            className="youtube-video"
+                            key={i}
+                            src={url}
+                            allowFullScreen
+                            title={`Video ${i + 1}`}
+                        />
+                    </div>
+                ))}
+            </div>
         </div>
     );
 }
@@ -162,7 +180,6 @@ export default function Music() {
 
     return (
         <div className="music-container">
-            <h1>Latest Releases</h1>
             {loading && (
                 <div className="albums-container">
                     {releases.map((i) => (<Album key={i} srcAlbum={null} loading={loading}/>))}
@@ -173,7 +190,6 @@ export default function Music() {
                     {albums.map((album,i) => (<Album key={i} srcAlbum={album} loading={loading}/>))}
                 </div>
             )}
-            <YoutubeCarousel/>
         </div>
     )
 }
